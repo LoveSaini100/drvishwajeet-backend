@@ -21,11 +21,26 @@ dotenv.config();
 const app = express();
 
 // Middleware
-// Enable CORS for all origins (Localhost, custom domains, live host)
+// Enable CORS for all origins (Localhost, custom domains, Vercel deployments)
 app.use(cors({
   origin: true,
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 }));
+
+// Handle preflight OPTIONS requests immediately
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -36,12 +51,19 @@ connectDB()
     console.warn('MongoDB background connection note:', err.message);
   });
 
-// API Routes
+// API Routes (Mounted under /api)
 app.use('/api', authRoutes);
 app.use('/api', registrationRoutes);
 app.use('/api', contactRoutes);
 app.use('/api', emailRoutes);
 app.use('/api', dashboardRoutes);
+
+// Fallback direct routes (in case /api prefix was omitted by frontend env)
+app.use(authRoutes);
+app.use(registrationRoutes);
+app.use(contactRoutes);
+app.use(emailRoutes);
+app.use(dashboardRoutes);
 
 // Root Welcome & Status Endpoint
 app.get('/', (req, res) => {
