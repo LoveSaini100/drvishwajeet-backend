@@ -43,6 +43,25 @@ app.use('/api', contactRoutes);
 app.use('/api', emailRoutes);
 app.use('/api', dashboardRoutes);
 
+// Root Welcome & Status Endpoint
+app.get('/', (req, res) => {
+  res.json({
+    status: 'online',
+    service: 'Dr. Vishwajeet Portfolio & Admin Backend API',
+    message: 'Server is running smoothly.',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/admin/login',
+      dashboard: '/api/dashboard/stats',
+      registrations: '/api/registrations',
+      contacts: '/api/contacts',
+      birthdays: '/api/birthdays/today',
+      email: '/api/email/send'
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
